@@ -1,0 +1,307 @@
+:root {
+  --bg-main: #080a14;
+  --surface: rgba(16, 21, 38, 0.78);
+  --surface-border: rgba(128, 149, 255, 0.2);
+  --text-main: #f2f5ff;
+  --text-muted: #9ca8d2;
+  --accent: #7f5af0;
+  --accent-2: #2cb67d;
+  --danger: #ff5470;
+  --shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  color: var(--text-main);
+  background: radial-gradient(circle at 20% 15%, #201c62 0%, transparent 32%),
+    radial-gradient(circle at 78% 20%, #0a7f67 0%, transparent 38%),
+    radial-gradient(circle at 30% 85%, #591a67 0%, transparent 28%),
+    var(--bg-main);
+}
+
+.background-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+
+.app-shell {
+  width: min(780px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 28px;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1rem;
+  margin-bottom: 1.6rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent-2);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+h1 {
+  margin: 0.25rem 0;
+  font-size: clamp(2rem, 3.4vw, 2.6rem);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.summary-card {
+  min-width: 180px;
+  border: 1px solid var(--surface-border);
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+  text-align: right;
+  background: rgba(26, 31, 52, 0.7);
+}
+
+.summary-card p,
+.summary-card small {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.summary-card strong {
+  display: block;
+  margin: 0.3rem 0;
+  font-size: 1.7rem;
+}
+
+.composer form {
+  display: flex;
+  gap: 0.7rem;
+}
+
+input[type="text"] {
+  flex: 1;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: rgba(12, 15, 29, 0.8);
+  color: var(--text-main);
+  padding: 0.9rem 1rem;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+input[type="text"]:focus {
+  border-color: var(--accent);
+}
+
+button {
+  border: 0;
+  border-radius: 14px;
+  padding: 0.85rem 1.1rem;
+  cursor: pointer;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(130deg, var(--accent), #5f7bff);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  opacity: 0.96;
+}
+
+.toolbar {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.filters {
+  display: inline-flex;
+  background: rgba(12, 15, 29, 0.8);
+  border-radius: 999px;
+  padding: 0.25rem;
+}
+
+.filter-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 999px;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+}
+
+.filter-btn.active {
+  background: rgba(127, 90, 240, 0.25);
+  color: var(--text-main);
+}
+
+.ghost-btn {
+  background: rgba(255, 84, 112, 0.18);
+  color: #ffc6d1;
+  font-weight: 600;
+}
+
+.todo-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.todo-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.85rem;
+  border: 1px solid rgba(112, 128, 197, 0.3);
+  border-radius: 16px;
+  padding: 0.8rem;
+  background: rgba(12, 15, 29, 0.82);
+}
+
+.todo-item.done {
+  border-color: rgba(44, 182, 125, 0.5);
+  background: rgba(16, 38, 36, 0.8);
+}
+
+.check-wrap {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.todo-check {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.check-custom {
+  position: absolute;
+  inset: 0;
+  border-radius: 7px;
+  border: 1px solid rgba(176, 187, 232, 0.65);
+}
+
+.todo-check:checked + .check-custom {
+  background: var(--accent-2);
+  border-color: transparent;
+}
+
+.todo-check:checked + .check-custom::after {
+  content: "✓";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.9rem;
+  color: #022117;
+  font-weight: 900;
+}
+
+.todo-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.todo-item.done .todo-title {
+  text-decoration: line-through;
+  color: #9ac8b7;
+}
+
+.todo-date {
+  color: var(--text-muted);
+}
+
+.todo-actions {
+  display: inline-flex;
+  gap: 0.45rem;
+}
+
+.icon-btn {
+  background: rgba(112, 128, 197, 0.18);
+  padding: 0.45rem 0.55rem;
+  font-size: 0.9rem;
+}
+
+.delete-btn {
+  background: rgba(255, 84, 112, 0.15);
+}
+
+.empty-state {
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 1.5rem;
+  display: none;
+}
+
+.empty-state.visible {
+  display: block;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 1.2rem;
+    border-radius: 20px;
+  }
+
+  .composer form {
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  .toolbar {
+    flex-direction: column;
+  }
+
+  .filters {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .todo-item {
+    grid-template-columns: auto 1fr;
+  }
+
+  .todo-actions {
+    grid-column: 2 / -1;
+    justify-content: flex-end;
+  }
+}
