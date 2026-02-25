@@ -145,7 +145,11 @@ function renderTodos() {
 
     checkbox.addEventListener("change", async () => {
       try {
-        await updateData(todo.id, { done: checkbox.checked });
+        await apiRequest(`api/todos/${encodeURIComponent(todo.id)}`, {
+          method: "PUT",
+          body: JSON.stringify({ done: checkbox.checked }),
+        });
+        todo.done = checkbox.checked;
         renderTodos();
       } catch (error) {
         checkbox.checked = !checkbox.checked;
@@ -160,7 +164,11 @@ function renderTodos() {
       if (!cleaned) return;
 
       try {
-        await updateData(todo.id, { title: cleaned });
+        await apiRequest(`api/todos/${encodeURIComponent(todo.id)}`, {
+          method: "PUT",
+          body: JSON.stringify({ title: cleaned }),
+        });
+        todo.title = cleaned;
         renderTodos();
       } catch (error) {
         alert(error.message);
@@ -169,7 +177,8 @@ function renderTodos() {
 
     deleteBtn.addEventListener("click", async () => {
       try {
-        await deleteData(todo.id);
+        await apiRequest(`api/todos/${encodeURIComponent(todo.id)}`, { method: "DELETE" });
+        todos = todos.filter((itemTodo) => itemTodo.id !== todo.id);
         renderTodos();
       } catch (error) {
         alert(error.message);
@@ -185,9 +194,9 @@ function renderTodos() {
 
 async function loadTodos() {
   try {
-    await loadData();
+    todos = await apiRequest("api/todos");
   } catch (error) {
-    alert(`Falha ao carregar dados: ${error.message}`);
+    alert(`Falha ao carregar dados da API: ${error.message}`);
     todos = [];
   }
   renderTodos();
@@ -202,7 +211,12 @@ todoForm.addEventListener("submit", async (event) => {
   const newTodo = createTodo(value);
 
   try {
-    await createData(newTodo);
+    await apiRequest("api/todos", {
+      method: "POST",
+      body: JSON.stringify(newTodo),
+    });
+
+    todos.unshift(newTodo);
     renderTodos();
     todoInput.value = "";
     todoInput.focus();
@@ -224,7 +238,12 @@ clearDone.addEventListener("click", async () => {
   const completedTodoIds = todos.filter((todo) => todo.done).map((todo) => todo.id);
 
   try {
-    await Promise.all(completedTodoIds.map((todoId) => deleteData(todoId)));
+    await Promise.all(
+      completedTodos.map((todo) =>
+        apiRequest(`api/todos/${encodeURIComponent(todo.id)}`, { method: "DELETE" })
+      )
+    );
+    todos = todos.filter((todo) => !todo.done);
     renderTodos();
   } catch (error) {
     alert(error.message);

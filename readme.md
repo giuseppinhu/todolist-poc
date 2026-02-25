@@ -1,14 +1,11 @@
-# TaskFlow (GitHub Pages + backend opcional em Node.js)
+# TaskFlow (Node.js + MySQL)
 
-To-do list profissional com CRUD completo.
+To-do list profissional com CRUD completo conectado em API Node.js.
 
-## 1) GitHub Pages (sem backend)
+## 1) Backend Node.js (obrigatório)
 
-Por padrão, o app salva tarefas em `localStorage` (no navegador), então funciona direto no GitHub Pages sem backend.
-
-## 2) Backend opcional (Node.js + MySQL filess.io)
-
-Se quiser persistência em banco compartilhado, rode a API Node.js (`server.js`) em qualquer host com suporte a Node e acesso ao MySQL.
+O frontend consome os endpoints REST em `/api/todos`.
+Você pode hospedar a API em qualquer serviço com suporte a Node.js e acesso ao MySQL do filess.io.
 
 Defina no ambiente da API:
 
@@ -35,24 +32,17 @@ A API expõe:
 - `PUT /api/todos/:id`
 - `DELETE /api/todos/:id`
 
-## 3) Deploy no GitHub Pages (frontend estático)
+## 2) Frontend
 
-### Passos
-1. Publique o frontend no GitHub Pages.
-2. Se tiver backend Node, configure a URL base da API editando `config.js`:
+Configure a URL da API em `config.js`:
 
 ```js
 window.TASKFLOW_API_BASE = "https://seu-backend.com";
 ```
 
-Se deixar vazio (`""`), o app roda 100% no navegador usando `localStorage`.
+Se deixar vazio (`""`), o frontend tenta usar o mesmo host (`/api/todos`).
 
 ## 4) Rodar localmente
-
-### Frontend estático (simulando GitHub Pages)
-```bash
-python3 -m http.server 4173
-```
 
 ### API Node.js
 ```bash
@@ -60,13 +50,19 @@ npm install
 PORT=3000 npm start
 ```
 
-Exemplo com frontend local apontando para API local:
+### Frontend estático
+```bash
+npm install
+PORT=3000 npm start
+```
+
+Para desenvolvimento local, use:
 
 ```js
 window.TASKFLOW_API_BASE = "http://localhost:3000";
 ```
 
-## Schema usado no backend opcional
+## Schema usado
 
 ```sql
 CREATE TABLE IF NOT EXISTS todos (
