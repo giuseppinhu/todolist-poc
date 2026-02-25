@@ -1,4 +1,6 @@
 const API_BASE = (window.TASKFLOW_API_BASE || "").replace(/\/$/, "");
+const USE_REMOTE_API = Boolean(API_BASE);
+const LOCAL_STORAGE_KEY = "taskflow.todos";
 
 const todoForm = document.querySelector("#todoForm");
 const todoInput = document.querySelector("#todoInput");
@@ -12,6 +14,19 @@ const filterButtons = document.querySelectorAll(".filter-btn");
 
 let todos = [];
 let currentFilter = "all";
+
+function readLocalTodos() {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalTodos(nextTodos) {
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(nextTodos));
+}
 
 async function apiRequest(path, options = {}) {
   const url = `${API_BASE}/${path}`;
@@ -27,6 +42,55 @@ async function apiRequest(path, options = {}) {
   }
 
   return payload;
+}
+
+async function loadData() {
+  if (!USE_REMOTE_API) {
+    todos = readLocalTodos();
+    return;
+  }
+
+  todos = await apiRequest("api/todos");
+}
+
+async function createData(newTodo) {
+  if (!USE_REMOTE_API) {
+    todos.unshift(newTodo);
+    writeLocalTodos(todos);
+    return;
+  }
+
+  await apiRequest("api/todos", {
+    method: "POST",
+    body: JSON.stringify(newTodo),
+  });
+  todos.unshift(newTodo);
+}
+
+async function updateData(todoId, patch) {
+  if (!USE_REMOTE_API) {
+    todos = todos.map((todo) => (todo.id === todoId ? { ...todo, ...patch } : todo));
+    writeLocalTodos(todos);
+    return;
+  }
+
+  await apiRequest(`api/todos/${encodeURIComponent(todoId)}`, {
+    method: "PUT",
+    body: JSON.stringify(patch),
+  });
+
+  todos = todos.map((todo) => (todo.id === todoId ? { ...todo, ...patch } : todo));
+}
+
+async function deleteData(todoId) {
+  if (!USE_REMOTE_API) {
+    todos = todos.filter((todo) => todo.id !== todoId);
+    writeLocalTodos(todos);
+    return;
+  }
+
+  await apiRequest(`api/todos/${encodeURIComponent(todoId)}`, { method: "DELETE" });
+  todos = todos.filter((todo) => todo.id !== todoId);
 }
 
 function getFormattedDate(dateString) {
@@ -171,7 +235,7 @@ filterButtons.forEach((button) => {
 });
 
 clearDone.addEventListener("click", async () => {
-  const completedTodos = todos.filter((todo) => todo.done);
+  const completedTodoIds = todos.filter((todo) => todo.done).map((todo) => todo.id);
 
   try {
     await Promise.all(

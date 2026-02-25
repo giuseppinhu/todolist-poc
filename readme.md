@@ -42,7 +42,7 @@ window.TASKFLOW_API_BASE = "https://seu-backend.com";
 
 Se deixar vazio (`""`), o frontend tenta usar o mesmo host (`/api/todos`).
 
-## 3) Rodar localmente
+## 4) Rodar localmente
 
 ### API Node.js
 ```bash
@@ -52,7 +52,8 @@ PORT=3000 npm start
 
 ### Frontend estático
 ```bash
-python3 -m http.server 4173
+npm install
+PORT=3000 npm start
 ```
 
 Para desenvolvimento local, use:
