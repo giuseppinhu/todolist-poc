@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaskFlow • To-do List</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="background-glow" aria-hidden="true"></div>
+
+    <main class="app-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Produtividade inteligente</p>
+          <h1>TaskFlow</h1>
+          <p class="subtitle">Organize tarefas com foco, clareza e estilo. Dados salvos no MySQL (filess.io).</p>
+        </div>
+        <div class="summary-card" aria-live="polite">
+          <p>Tarefas concluídas</p>
+          <strong id="completionRate">0%</strong>
+          <small id="summaryText">0 de 0 finalizadas</small>
+        </div>
+      </header>
+
+      <section class="composer" aria-label="Adicionar nova tarefa">
+        <form id="todoForm">
+          <label class="sr-only" for="todoInput">Descrição da tarefa</label>
+          <input
+            id="todoInput"
+            name="todoInput"
+            type="text"
+            maxlength="120"
+            placeholder="Ex.: Revisar proposta comercial"
+            required
+          />
+          <button type="submit">Adicionar</button>
+        </form>
+      </section>
+
+      <section class="toolbar" aria-label="Filtros e ações">
+        <div class="filters" role="tablist" aria-label="Filtrar tarefas">
+          <button class="filter-btn active" data-filter="all" role="tab">Todas</button>
+          <button class="filter-btn" data-filter="pending" role="tab">Pendentes</button>
+          <button class="filter-btn" data-filter="done" role="tab">Concluídas</button>
+        </div>
+        <button id="clearDone" class="ghost-btn" type="button">Limpar concluídas</button>
+      </section>
+
+      <section aria-live="polite">
+        <ul id="todoList" class="todo-list"></ul>
+        <p id="emptyState" class="empty-state">
+          Sua lista está vazia. Adicione sua primeira tarefa e comece com tudo! 🚀
+        </p>
+      </section>
+    </main>
+
+    <template id="todoItemTemplate">
+      <li class="todo-item">
+        <label class="check-wrap">
+          <input class="todo-check" type="checkbox" />
+          <span class="check-custom" aria-hidden="true"></span>
+        </label>
+
+        <div class="todo-content">
+          <p class="todo-title"></p>
+          <small class="todo-date"></small>
+        </div>
+
+        <div class="todo-actions">
+          <button class="icon-btn edit-btn" type="button" aria-label="Editar tarefa">✏️</button>
+          <button class="icon-btn delete-btn" type="button" aria-label="Excluir tarefa">🗑️</button>
+        </div>
+      </li>
+    </template>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
