@@ -15,19 +15,6 @@ const filterButtons = document.querySelectorAll(".filter-btn");
 let todos = [];
 let currentFilter = "all";
 
-function readLocalTodos() {
-  try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeLocalTodos(nextTodos) {
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(nextTodos));
-}
-
 async function apiRequest(path, options = {}) {
   const url = `${API_BASE}/${path}`;
 
@@ -45,21 +32,10 @@ async function apiRequest(path, options = {}) {
 }
 
 async function loadData() {
-  if (!USE_REMOTE_API) {
-    todos = readLocalTodos();
-    return;
-  }
-
   todos = await apiRequest("api/todos");
 }
 
 async function createData(newTodo) {
-  if (!USE_REMOTE_API) {
-    todos.unshift(newTodo);
-    writeLocalTodos(todos);
-    return;
-  }
-
   await apiRequest("api/todos", {
     method: "POST",
     body: JSON.stringify(newTodo),
@@ -68,12 +44,6 @@ async function createData(newTodo) {
 }
 
 async function updateData(todoId, patch) {
-  if (!USE_REMOTE_API) {
-    todos = todos.map((todo) => (todo.id === todoId ? { ...todo, ...patch } : todo));
-    writeLocalTodos(todos);
-    return;
-  }
-
   await apiRequest(`api/todos/${encodeURIComponent(todoId)}`, {
     method: "PUT",
     body: JSON.stringify(patch),
@@ -83,12 +53,6 @@ async function updateData(todoId, patch) {
 }
 
 async function deleteData(todoId) {
-  if (!USE_REMOTE_API) {
-    todos = todos.filter((todo) => todo.id !== todoId);
-    writeLocalTodos(todos);
-    return;
-  }
-
   await apiRequest(`api/todos/${encodeURIComponent(todoId)}`, { method: "DELETE" });
   todos = todos.filter((todo) => todo.id !== todoId);
 }
