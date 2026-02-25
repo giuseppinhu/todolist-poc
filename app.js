@@ -1,5 +1,3 @@
-const STORAGE_KEY = "taskflow.todos.v1";
-
 const todoForm = document.querySelector("#todoForm");
 const todoInput = document.querySelector("#todoInput");
 const todoList = document.querySelector("#todoList");
@@ -10,23 +8,21 @@ const summaryText = document.querySelector("#summaryText");
 const clearDone = document.querySelector("#clearDone");
 const filterButtons = document.querySelectorAll(".filter-btn");
 
-let todos = loadTodos();
+let todos = [];
 let currentFilter = "all";
 
-function loadTodos() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
+async function apiRequest(url, options = {}) {
+  const response = await fetch(url, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
 
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || "Erro inesperado no servidor");
   }
-}
 
-function saveTodos() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+  return payload;
 }
 
 function getFormattedDate(dateString) {
@@ -46,14 +42,8 @@ function createTodo(title) {
 }
 
 function getVisibleTodos() {
-  if (currentFilter === "pending") {
-    return todos.filter((todo) => !todo.done);
-  }
-
-  if (currentFilter === "done") {
-    return todos.filter((todo) => todo.done);
-  }
-
+  if (currentFilter === "pending") return todos.filter((todo) => !todo.done);
+  if (currentFilter === "done") return todos.filter((todo) => todo.done);
   return todos;
 }
 
@@ -83,30 +73,48 @@ function renderTodos() {
     date.textContent = `Criada em ${getFormattedDate(todo.createdAt)}`;
     checkbox.checked = todo.done;
 
-    if (todo.done) {
-      item.classList.add("done");
-    }
+    if (todo.done) item.classList.add("done");
 
-    checkbox.addEventListener("change", () => {
-      todo.done = checkbox.checked;
-      saveTodos();
-      renderTodos();
+    checkbox.addEventListener("change", async () => {
+      try {
+        await apiRequest(`api.php?id=${todo.id}`, {
+          method: "PUT",
+          body: JSON.stringify({ done: checkbox.checked }),
+        });
+        todo.done = checkbox.checked;
+        renderTodos();
+      } catch (error) {
+        checkbox.checked = !checkbox.checked;
+        alert(error.message);
+      }
     });
 
-    editBtn.addEventListener("click", () => {
+    editBtn.addEventListener("click", async () => {
       const updated = window.prompt("Edite sua tarefa:", todo.title);
       if (!updated) return;
       const cleaned = updated.trim();
       if (!cleaned) return;
-      todo.title = cleaned;
-      saveTodos();
-      renderTodos();
+
+      try {
+        await apiRequest(`api.php?id=${todo.id}`, {
+          method: "PUT",
+          body: JSON.stringify({ title: cleaned }),
+        });
+        todo.title = cleaned;
+        renderTodos();
+      } catch (error) {
+        alert(error.message);
+      }
     });
 
-    deleteBtn.addEventListener("click", () => {
-      todos = todos.filter((itemTodo) => itemTodo.id !== todo.id);
-      saveTodos();
-      renderTodos();
+    deleteBtn.addEventListener("click", async () => {
+      try {
+        await apiRequest(`api.php?id=${todo.id}`, { method: "DELETE" });
+        todos = todos.filter((itemTodo) => itemTodo.id !== todo.id);
+        renderTodos();
+      } catch (error) {
+        alert(error.message);
+      }
     });
 
     todoList.appendChild(fragment);
@@ -116,34 +124,58 @@ function renderTodos() {
   renderSummary();
 }
 
-todoForm.addEventListener("submit", (event) => {
+async function loadTodos() {
+  try {
+    todos = await apiRequest("api.php");
+  } catch (error) {
+    alert(`Falha ao carregar dados do MySQL: ${error.message}`);
+    todos = [];
+  }
+  renderTodos();
+}
+
+todoForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const value = todoInput.value.trim();
   if (!value) return;
 
-  todos.unshift(createTodo(value));
-  saveTodos();
-  renderTodos();
-  todoInput.value = "";
-  todoInput.focus();
+  const newTodo = createTodo(value);
+
+  try {
+    await apiRequest("api.php", {
+      method: "POST",
+      body: JSON.stringify(newTodo),
+    });
+
+    todos.unshift(newTodo);
+    renderTodos();
+    todoInput.value = "";
+    todoInput.focus();
+  } catch (error) {
+    alert(error.message);
+  }
 });
 
 filterButtons.forEach((button) => {
   button.addEventListener("click", () => {
     currentFilter = button.dataset.filter;
-
     filterButtons.forEach((btn) => btn.classList.remove("active"));
     button.classList.add("active");
-
     renderTodos();
   });
 });
 
-clearDone.addEventListener("click", () => {
-  todos = todos.filter((todo) => !todo.done);
-  saveTodos();
-  renderTodos();
+clearDone.addEventListener("click", async () => {
+  const completedTodos = todos.filter((todo) => todo.done);
+
+  try {
+    await Promise.all(completedTodos.map((todo) => apiRequest(`api.php?id=${todo.id}`, { method: "DELETE" })));
+    todos = todos.filter((todo) => !todo.done);
+    renderTodos();
+  } catch (error) {
+    alert(error.message);
+  }
 });
 
-renderTodos();
+loadTodos();
