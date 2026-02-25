@@ -1,13 +1,16 @@
-# TaskFlow (MySQL + filess.io)
+# TaskFlow (GitHub Pages + backend opcional em Node.js)
 
-To-do list profissional com CRUD completo conectado ao MySQL.
+To-do list profissional com CRUD completo.
 
-## 1) Backend MySQL (filess.io)
+## 1) GitHub Pages (sem backend)
 
-O frontend chama um endpoint HTTP (`api.php`) para persistência.
-Você pode hospedar esse backend em qualquer servidor PHP com acesso ao MySQL do filess.io.
+Por padrão, o app salva tarefas em `localStorage` (no navegador), então funciona direto no GitHub Pages sem backend.
 
-Defina no ambiente do backend:
+## 2) Backend opcional (Node.js + MySQL filess.io)
+
+Se quiser persistência em banco compartilhado, rode a API Node.js (`server.js`) em qualquer host com suporte a Node e acesso ao MySQL.
+
+Defina no ambiente da API:
 
 ```bash
 export MYSQL_HOST="seu-host-filess"
@@ -19,37 +22,51 @@ export MYSQL_PASSWORD="sua_senha"
 
 > Também são aceitas variáveis com prefixo `FILESS_MYSQL_`.
 
-## 2) Deploy no GitHub Pages (frontend estático)
+Instalação e execução da API:
 
-Este repositório já está configurado com workflow em `.github/workflows/deploy-pages.yml`.
+```bash
+npm install
+npm start
+```
+
+A API expõe:
+- `GET /api/todos`
+- `POST /api/todos`
+- `PUT /api/todos/:id`
+- `DELETE /api/todos/:id`
+
+## 3) Deploy no GitHub Pages (frontend estático)
 
 ### Passos
-1. No GitHub, habilite **Settings → Pages → Source: GitHub Actions**.
-2. Faça push para a branch (`main`, `master` ou `work`) para disparar deploy.
-3. Configure a URL do backend editando `config.js`:
+1. Publique o frontend no GitHub Pages.
+2. Se tiver backend Node, configure a URL base da API editando `config.js`:
 
 ```js
 window.TASKFLOW_API_BASE = "https://seu-backend.com";
 ```
 
-Se deixar vazio (`""`), o app chama `api.php` no mesmo host.
+Se deixar vazio (`""`), o app roda 100% no navegador usando `localStorage`.
 
-## 3) Rodar localmente
+## 4) Rodar localmente
 
-### Frontend + backend juntos (PHP local)
-```bash
-php -S 0.0.0.0:4173
-```
-Abra `http://localhost:4173`.
-
-### Apenas frontend estático (simulando GitHub Pages)
+### Frontend estático (simulando GitHub Pages)
 ```bash
 python3 -m http.server 4173
 ```
 
-## Schema mantido
+### API Node.js
+```bash
+npm install
+PORT=3000 npm start
+```
 
-A tabela `todos` usa os campos do schema pedido (`id`, `done`, `createdAt`) e adiciona `title`:
+Exemplo com frontend local apontando para API local:
+
+```js
+window.TASKFLOW_API_BASE = "http://localhost:3000";
+```
+
+## Schema usado no backend opcional
 
 ```sql
 CREATE TABLE IF NOT EXISTS todos (
@@ -59,5 +76,3 @@ CREATE TABLE IF NOT EXISTS todos (
   createdAt DATETIME NOT NULL
 );
 ```
-
-A criação da tabela é automática via backend (`db.php`).
