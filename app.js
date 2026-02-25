@@ -1,3 +1,5 @@
+const API_BASE = (window.TASKFLOW_API_BASE || "").replace(/\/$/, "");
+
 const todoForm = document.querySelector("#todoForm");
 const todoInput = document.querySelector("#todoInput");
 const todoList = document.querySelector("#todoList");
@@ -11,7 +13,9 @@ const filterButtons = document.querySelectorAll(".filter-btn");
 let todos = [];
 let currentFilter = "all";
 
-async function apiRequest(url, options = {}) {
+async function apiRequest(path, options = {}) {
+  const url = API_BASE ? `${API_BASE}/${path}` : path;
+
   const response = await fetch(url, {
     headers: { "Content-Type": "application/json" },
     ...options,
@@ -77,7 +81,7 @@ function renderTodos() {
 
     checkbox.addEventListener("change", async () => {
       try {
-        await apiRequest(`api.php?id=${todo.id}`, {
+        await apiRequest(`api.php?id=${encodeURIComponent(todo.id)}`, {
           method: "PUT",
           body: JSON.stringify({ done: checkbox.checked }),
         });
@@ -96,7 +100,7 @@ function renderTodos() {
       if (!cleaned) return;
 
       try {
-        await apiRequest(`api.php?id=${todo.id}`, {
+        await apiRequest(`api.php?id=${encodeURIComponent(todo.id)}`, {
           method: "PUT",
           body: JSON.stringify({ title: cleaned }),
         });
@@ -109,7 +113,7 @@ function renderTodos() {
 
     deleteBtn.addEventListener("click", async () => {
       try {
-        await apiRequest(`api.php?id=${todo.id}`, { method: "DELETE" });
+        await apiRequest(`api.php?id=${encodeURIComponent(todo.id)}`, { method: "DELETE" });
         todos = todos.filter((itemTodo) => itemTodo.id !== todo.id);
         renderTodos();
       } catch (error) {
@@ -170,7 +174,7 @@ clearDone.addEventListener("click", async () => {
   const completedTodos = todos.filter((todo) => todo.done);
 
   try {
-    await Promise.all(completedTodos.map((todo) => apiRequest(`api.php?id=${todo.id}`, { method: "DELETE" })));
+    await Promise.all(completedTodos.map((todo) => apiRequest(`api.php?id=${encodeURIComponent(todo.id)}`, { method: "DELETE" })));
     todos = todos.filter((todo) => !todo.done);
     renderTodos();
   } catch (error) {

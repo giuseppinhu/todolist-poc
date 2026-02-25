@@ -2,9 +2,12 @@
 
 To-do list profissional com CRUD completo conectado ao MySQL.
 
-## 1) Configurar variáveis de ambiente
+## 1) Backend MySQL (filess.io)
 
-Defina no shell (ou no seu serviço de deploy) os dados do banco MySQL do filess.io:
+O frontend chama um endpoint HTTP (`api.php`) para persistência.
+Você pode hospedar esse backend em qualquer servidor PHP com acesso ao MySQL do filess.io.
+
+Defina no ambiente do backend:
 
 ```bash
 export MYSQL_HOST="seu-host-filess"
@@ -16,13 +19,33 @@ export MYSQL_PASSWORD="sua_senha"
 
 > Também são aceitas variáveis com prefixo `FILESS_MYSQL_`.
 
-## 2) Rodar localmente
+## 2) Deploy no GitHub Pages (frontend estático)
 
+Este repositório já está configurado com workflow em `.github/workflows/deploy-pages.yml`.
+
+### Passos
+1. No GitHub, habilite **Settings → Pages → Source: GitHub Actions**.
+2. Faça push para a branch (`main`, `master` ou `work`) para disparar deploy.
+3. Configure a URL do backend editando `config.js`:
+
+```js
+window.TASKFLOW_API_BASE = "https://seu-backend.com";
+```
+
+Se deixar vazio (`""`), o app chama `api.php` no mesmo host.
+
+## 3) Rodar localmente
+
+### Frontend + backend juntos (PHP local)
 ```bash
 php -S 0.0.0.0:4173
 ```
-
 Abra `http://localhost:4173`.
+
+### Apenas frontend estático (simulando GitHub Pages)
+```bash
+python3 -m http.server 4173
+```
 
 ## Schema mantido
 
