@@ -1,3 +1,3 @@
-// Configuração para ambiente estático (ex.: GitHub Pages)
-// Em produção, defina window.TASKFLOW_API_BASE para a URL pública do seu backend.
+// Para GitHub Pages, deixe vazio para usar localStorage no navegador.
+// Para usar backend Node.js remoto, defina a URL pública base (sem barra final).
 window.TASKFLOW_API_BASE = window.TASKFLOW_API_BASE || "";

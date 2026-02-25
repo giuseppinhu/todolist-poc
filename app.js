@@ -1,4 +1,6 @@
 const API_BASE = (window.TASKFLOW_API_BASE || "").replace(/\/$/, "");
+const USE_REMOTE_API = Boolean(API_BASE);
+const LOCAL_STORAGE_KEY = "taskflow.todos";
 
 const todoForm = document.querySelector("#todoForm");
 const todoInput = document.querySelector("#todoInput");
@@ -13,8 +15,21 @@ const filterButtons = document.querySelectorAll(".filter-btn");
 let todos = [];
 let currentFilter = "all";
 
+function readLocalTodos() {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalTodos(nextTodos) {
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(nextTodos));
+}
+
 async function apiRequest(path, options = {}) {
-  const url = API_BASE ? `${API_BASE}/${path}` : path;
+  const url = `${API_BASE}/${path}`;
 
   const response = await fetch(url, {
     headers: { "Content-Type": "application/json" },
@@ -27,6 +42,55 @@ async function apiRequest(path, options = {}) {
   }
 
   return payload;
+}
+
+async function loadData() {
+  if (!USE_REMOTE_API) {
+    todos = readLocalTodos();
+    return;
+  }
+
+  todos = await apiRequest("api/todos");
+}
+
+async function createData(newTodo) {
+  if (!USE_REMOTE_API) {
+    todos.unshift(newTodo);
+    writeLocalTodos(todos);
+    return;
+  }
+
+  await apiRequest("api/todos", {
+    method: "POST",
+    body: JSON.stringify(newTodo),
+  });
+  todos.unshift(newTodo);
+}
+
+async function updateData(todoId, patch) {
+  if (!USE_REMOTE_API) {
+    todos = todos.map((todo) => (todo.id === todoId ? { ...todo, ...patch } : todo));
+    writeLocalTodos(todos);
+    return;
+  }
+
+  await apiRequest(`api/todos/${encodeURIComponent(todoId)}`, {
+    method: "PUT",
+    body: JSON.stringify(patch),
+  });
+
+  todos = todos.map((todo) => (todo.id === todoId ? { ...todo, ...patch } : todo));
+}
+
+async function deleteData(todoId) {
+  if (!USE_REMOTE_API) {
+    todos = todos.filter((todo) => todo.id !== todoId);
+    writeLocalTodos(todos);
+    return;
+  }
+
+  await apiRequest(`api/todos/${encodeURIComponent(todoId)}`, { method: "DELETE" });
+  todos = todos.filter((todo) => todo.id !== todoId);
 }
 
 function getFormattedDate(dateString) {
@@ -81,11 +145,7 @@ function renderTodos() {
 
     checkbox.addEventListener("change", async () => {
       try {
-        await apiRequest(`api.php?id=${encodeURIComponent(todo.id)}`, {
-          method: "PUT",
-          body: JSON.stringify({ done: checkbox.checked }),
-        });
-        todo.done = checkbox.checked;
+        await updateData(todo.id, { done: checkbox.checked });
         renderTodos();
       } catch (error) {
         checkbox.checked = !checkbox.checked;
@@ -100,11 +160,7 @@ function renderTodos() {
       if (!cleaned) return;
 
       try {
-        await apiRequest(`api.php?id=${encodeURIComponent(todo.id)}`, {
-          method: "PUT",
-          body: JSON.stringify({ title: cleaned }),
-        });
-        todo.title = cleaned;
+        await updateData(todo.id, { title: cleaned });
         renderTodos();
       } catch (error) {
         alert(error.message);
@@ -113,8 +169,7 @@ function renderTodos() {
 
     deleteBtn.addEventListener("click", async () => {
       try {
-        await apiRequest(`api.php?id=${encodeURIComponent(todo.id)}`, { method: "DELETE" });
-        todos = todos.filter((itemTodo) => itemTodo.id !== todo.id);
+        await deleteData(todo.id);
         renderTodos();
       } catch (error) {
         alert(error.message);
@@ -130,9 +185,9 @@ function renderTodos() {
 
 async function loadTodos() {
   try {
-    todos = await apiRequest("api.php");
+    await loadData();
   } catch (error) {
-    alert(`Falha ao carregar dados do MySQL: ${error.message}`);
+    alert(`Falha ao carregar dados: ${error.message}`);
     todos = [];
   }
   renderTodos();
@@ -147,12 +202,7 @@ todoForm.addEventListener("submit", async (event) => {
   const newTodo = createTodo(value);
 
   try {
-    await apiRequest("api.php", {
-      method: "POST",
-      body: JSON.stringify(newTodo),
-    });
-
-    todos.unshift(newTodo);
+    await createData(newTodo);
     renderTodos();
     todoInput.value = "";
     todoInput.focus();
@@ -171,11 +221,10 @@ filterButtons.forEach((button) => {
 });
 
 clearDone.addEventListener("click", async () => {
-  const completedTodos = todos.filter((todo) => todo.done);
+  const completedTodoIds = todos.filter((todo) => todo.done).map((todo) => todo.id);
 
   try {
-    await Promise.all(completedTodos.map((todo) => apiRequest(`api.php?id=${encodeURIComponent(todo.id)}`, { method: "DELETE" })));
-    todos = todos.filter((todo) => !todo.done);
+    await Promise.all(completedTodoIds.map((todoId) => deleteData(todoId)));
     renderTodos();
   } catch (error) {
     alert(error.message);
