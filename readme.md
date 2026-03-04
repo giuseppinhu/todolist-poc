@@ -31,6 +31,7 @@ A API expõe:
 - `POST /api/todos`
 - `PUT /api/todos/:id`
 - `DELETE /api/todos/:id`
+- `GET /api/backlog?limit=50` (histórico de ações com logger)
 
 ## 2) Frontend
 
@@ -70,5 +71,20 @@ CREATE TABLE IF NOT EXISTS todos (
   title VARCHAR(120) NOT NULL,
   done TINYINT(1) NOT NULL DEFAULT 0,
   createdAt DATETIME NOT NULL
+);
+```
+
+## Backlog + logger
+
+Cada ação importante do CRUD gera um registro em `backlog_logs` e também um log no console da API.
+
+Schema adicional:
+
+```sql
+CREATE TABLE IF NOT EXISTS backlog_logs (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  action VARCHAR(80) NOT NULL,
+  details TEXT,
+  createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ```

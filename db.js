@@ -28,6 +28,37 @@ async function ensureSchema() {
       createdAt DATETIME NOT NULL
     )
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS backlog_logs (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      action VARCHAR(80) NOT NULL,
+      details TEXT,
+      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 }
 
-module.exports = { pool, ensureSchema };
+async function writeBacklog(action, details) {
+  await pool.query("INSERT INTO backlog_logs (action, details) VALUES (?, ?)", [
+    action,
+    details || null,
+  ]);
+}
+
+async function listBacklog(limit = 50) {
+  const safeLimit = Math.max(1, Math.min(Number(limit) || 50, 200));
+  const [rows] = await pool.query(
+    "SELECT id, action, details, createdAt FROM backlog_logs ORDER BY createdAt DESC LIMIT ?",
+    [safeLimit]
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    action: row.action,
+    details: row.details,
+    createdAt: new Date(row.createdAt).toISOString(),
+  }));
+}
+
+module.exports = { pool, ensureSchema, writeBacklog, listBacklog };

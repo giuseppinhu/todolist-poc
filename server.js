@@ -1,12 +1,26 @@
 const express = require("express");
 const cors = require("cors");
-const { pool, ensureSchema } = require("./db");
+const { pool, ensureSchema, writeBacklog, listBacklog } = require("./db");
+const { logInfo, logError } = require("./logger");
 
 const app = express();
 const PORT = Number(process.env.PORT || 4173);
 
 app.use(cors());
 app.use(express.json());
+
+app.use((req, _res, next) => {
+  logInfo("Requisição recebida", { method: req.method, path: req.path });
+  next();
+});
+
+async function registerBacklog(action, details) {
+  try {
+    await writeBacklog(action, details);
+  } catch (error) {
+    logError("Falha ao registrar backlog", { action, details, error: error.message });
+  }
+}
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
@@ -25,8 +39,10 @@ app.get("/api/todos", async (_req, res) => {
       createdAt: new Date(row.createdAt).toISOString(),
     }));
 
+    await registerBacklog("TODOS_LISTADOS", `Total de tarefas retornadas: ${todos.length}`);
     res.json(todos);
   } catch (error) {
+    logError("Erro ao listar tarefas", { error: error.message });
     res.status(500).json({
       error: "Falha ao conectar/executar no MySQL (filess.io).",
       details: error.message,
@@ -53,8 +69,10 @@ app.post("/api/todos", async (req, res) => {
       ]
     );
 
+    await registerBacklog("TODO_CRIADA", `Tarefa criada com id ${input.id}`);
     res.json({ ok: true });
   } catch (error) {
+    logError("Erro ao criar tarefa", { error: error.message, todoId: input.id });
     res.status(500).json({
       error: "Falha ao conectar/executar no MySQL (filess.io).",
       details: error.message,
@@ -87,8 +105,10 @@ app.put("/api/todos/:id", async (req, res) => {
   try {
     params.push(id);
     await pool.query(`UPDATE todos SET ${fields.join(", ")} WHERE id = ?`, params);
+    await registerBacklog("TODO_ATUALIZADA", `Tarefa ${id} atualizada`);
     res.json({ ok: true });
   } catch (error) {
+    logError("Erro ao atualizar tarefa", { error: error.message, todoId: id });
     res.status(500).json({
       error: "Falha ao conectar/executar no MySQL (filess.io).",
       details: error.message,
@@ -99,8 +119,10 @@ app.put("/api/todos/:id", async (req, res) => {
 app.delete("/api/todos/:id", async (req, res) => {
   try {
     await pool.query("DELETE FROM todos WHERE id = ?", [req.params.id]);
+    await registerBacklog("TODO_REMOVIDA", `Tarefa ${req.params.id} removida`);
     res.json({ ok: true });
   } catch (error) {
+    logError("Erro ao remover tarefa", { error: error.message, todoId: req.params.id });
     res.status(500).json({
       error: "Falha ao conectar/executar no MySQL (filess.io).",
       details: error.message,
@@ -108,14 +130,24 @@ app.delete("/api/todos/:id", async (req, res) => {
   }
 });
 
+app.get("/api/backlog", async (req, res) => {
+  try {
+    const logs = await listBacklog(req.query.limit);
+    res.json(logs);
+  } catch (error) {
+    logError("Erro ao listar backlog", { error: error.message });
+    res.status(500).json({ error: "Falha ao listar backlog.", details: error.message });
+  }
+});
+
 async function boot() {
   try {
     await ensureSchema();
     app.listen(PORT, () => {
-      console.log(`TaskFlow API running on port ${PORT}`);
+      logInfo(`TaskFlow API running on port ${PORT}`);
     });
   } catch (error) {
-    console.error("Falha ao iniciar API:", error.message);
+    logError("Falha ao iniciar API", { error: error.message });
     process.exit(1);
   }
 }
