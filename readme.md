@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS todos (
   id VARCHAR(64) PRIMARY KEY,
   title VARCHAR(120) NOT NULL,
   done TINYINT(1) NOT NULL DEFAULT 0,
+  priority ENUM('high', 'medium', 'low') NOT NULL DEFAULT 'medium',
   createdAt DATETIME NOT NULL
 );
 ```

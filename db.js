@@ -25,9 +25,20 @@ async function ensureSchema() {
       id VARCHAR(64) PRIMARY KEY,
       title VARCHAR(120) NOT NULL,
       done TINYINT(1) NOT NULL DEFAULT 0,
+      priority ENUM('high', 'medium', 'low') NOT NULL DEFAULT 'medium',
       createdAt DATETIME NOT NULL
     )
   `);
+
+  const [priorityColumn] = await pool.query(
+    "SHOW COLUMNS FROM todos LIKE 'priority'"
+  );
+
+  if (priorityColumn.length === 0) {
+    await pool.query(
+      "ALTER TABLE todos ADD COLUMN priority ENUM('high', 'medium', 'low') NOT NULL DEFAULT 'medium' AFTER done"
+    );
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS backlog_logs (

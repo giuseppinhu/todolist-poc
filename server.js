@@ -5,6 +5,11 @@ const { logInfo, logError } = require("./logger");
 
 const app = express();
 const PORT = Number(process.env.PORT || 4173);
+const VALID_PRIORITIES = new Set(["high", "medium", "low"]);
+
+function parsePriority(value) {
+  return VALID_PRIORITIES.has(value) ? value : "medium";
+}
 
 app.use(cors());
 app.use(express.json());
@@ -29,13 +34,14 @@ app.get("/health", (_req, res) => {
 app.get("/api/todos", async (_req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, title, done, createdAt FROM todos ORDER BY createdAt DESC"
+      "SELECT id, title, done, priority, createdAt FROM todos ORDER BY createdAt DESC"
     );
 
     const todos = rows.map((row) => ({
       id: row.id,
       title: row.title,
       done: Boolean(row.done),
+      priority: parsePriority(row.priority),
       createdAt: new Date(row.createdAt).toISOString(),
     }));
 
@@ -60,11 +66,12 @@ app.post("/api/todos", async (req, res) => {
 
   try {
     await pool.query(
-      "INSERT INTO todos (id, title, done, createdAt) VALUES (?, ?, ?, ?)",
+      "INSERT INTO todos (id, title, done, priority, createdAt) VALUES (?, ?, ?, ?, ?)",
       [
         input.id,
         String(input.title).trim(),
         input.done ? 1 : 0,
+        parsePriority(input.priority),
         new Date(input.createdAt).toISOString().slice(0, 19).replace("T", " "),
       ]
     );
@@ -95,6 +102,11 @@ app.put("/api/todos/:id", async (req, res) => {
   if (Object.prototype.hasOwnProperty.call(input, "done")) {
     fields.push("done = ?");
     params.push(input.done ? 1 : 0);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(input, "priority")) {
+    fields.push("priority = ?");
+    params.push(parsePriority(input.priority));
   }
 
   if (fields.length === 0) {
