@@ -13,23 +13,29 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="background-glow" aria-hidden="true"></div>
+    <div class="app-bg" aria-hidden="true">
+      <span class="orb orb-a"></span>
+      <span class="orb orb-b"></span>
+      <span class="orb orb-c"></span>
+      <span class="grid"></span>
+    </div>
 
     <main class="app-shell">
-      <header class="hero">
-        <div>
-          <p class="eyebrow">Produtividade inteligente</p>
+      <header class="hero glass">
+        <div class="hero-copy">
+          <p class="eyebrow">Workspace de produtividade</p>
           <h1>TaskFlow</h1>
-          <p class="subtitle">Organize tarefas com foco, clareza e estilo.</p>
+          <p class="subtitle">Sua central de tarefas, com visual premium e fluxo inteligente.</p>
         </div>
+
         <div class="summary-card" aria-live="polite">
-          <p>Tarefas concluídas</p>
+          <p>Progresso diário</p>
           <strong id="completionRate">0%</strong>
           <small id="summaryText">0 de 0 finalizadas</small>
         </div>
       </header>
 
-      <section class="composer" aria-label="Adicionar nova tarefa">
+      <section class="composer glass" aria-label="Adicionar nova tarefa">
         <form id="todoForm">
           <label class="sr-only" for="todoInput">Descrição da tarefa</label>
           <input
@@ -37,20 +43,22 @@
             name="todoInput"
             type="text"
             maxlength="120"
-            placeholder="Ex.: Revisar proposta comercial"
+            placeholder="Ex.: Fechar versão do projeto até às 16h"
             required
           />
+
           <label class="sr-only" for="todoPriority">Prioridade da tarefa</label>
           <select id="todoPriority" name="todoPriority" aria-label="Prioridade">
             <option value="high">Alta</option>
             <option value="medium" selected>Média</option>
             <option value="low">Baixa</option>
           </select>
-          <button type="submit">Adicionar</button>
+
+          <button type="submit">Adicionar tarefa</button>
         </form>
       </section>
 
-      <section class="toolbar" aria-label="Filtros e ações">
+      <section class="toolbar glass" aria-label="Filtros e ações">
         <div class="filters" role="tablist" aria-label="Filtrar tarefas">
           <button class="filter-btn active" data-filter="all" role="tab">Todas</button>
           <button class="filter-btn" data-filter="pending" role="tab">Pendentes</button>
@@ -59,10 +67,10 @@
         <button id="clearDone" class="ghost-btn" type="button">Limpar concluídas</button>
       </section>
 
-      <section aria-live="polite">
+      <section class="list-panel glass" aria-live="polite">
         <ul id="todoList" class="todo-list"></ul>
         <p id="emptyState" class="empty-state">
-          Sua lista está vazia. Adicione sua primeira tarefa e comece com tudo! 🚀
+          Nenhuma tarefa por aqui — adicione a primeira e comece seu sprint. ✨
         </p>
       </section>
     </main>
