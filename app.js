@@ -4,6 +4,7 @@ const LOCAL_STORAGE_KEY = "taskflow.todos";
 
 const todoForm = document.querySelector("#todoForm");
 const todoInput = document.querySelector("#todoInput");
+const todoPriority = document.querySelector("#todoPriority");
 const todoList = document.querySelector("#todoList");
 const template = document.querySelector("#todoItemTemplate");
 const emptyState = document.querySelector("#emptyState");
@@ -14,6 +15,17 @@ const filterButtons = document.querySelectorAll(".filter-btn");
 
 let todos = [];
 let currentFilter = "all";
+const priorityLabelMap = {
+  high: "Alta",
+  medium: "Média",
+  low: "Baixa",
+};
+
+const priorityOrder = {
+  high: 0,
+  medium: 1,
+  low: 2,
+};
 
 async function apiRequest(path, options = {}) {
   const url = `${API_BASE}/${path}`;
@@ -64,11 +76,16 @@ function getFormattedDate(dateString) {
   }).format(new Date(dateString));
 }
 
-function createTodo(title) {
+function normalizePriority(value) {
+  return Object.prototype.hasOwnProperty.call(priorityLabelMap, value) ? value : "medium";
+}
+
+function createTodo(title, priority) {
   return {
     id: crypto.randomUUID(),
     title: title.trim(),
     done: false,
+    priority: normalizePriority(priority),
     createdAt: new Date().toISOString(),
   };
 }
@@ -90,18 +107,26 @@ function renderSummary() {
 
 function renderTodos() {
   todoList.innerHTML = "";
-  const visibleTodos = getVisibleTodos();
+  const visibleTodos = getVisibleTodos().slice().sort((a, b) => {
+    const byPriority = priorityOrder[normalizePriority(a.priority)] - priorityOrder[normalizePriority(b.priority)];
+    if (byPriority !== 0) return byPriority;
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
 
   visibleTodos.forEach((todo) => {
     const fragment = template.content.cloneNode(true);
     const item = fragment.querySelector(".todo-item");
     const checkbox = fragment.querySelector(".todo-check");
     const title = fragment.querySelector(".todo-title");
+    const priority = fragment.querySelector(".todo-priority");
     const date = fragment.querySelector(".todo-date");
     const editBtn = fragment.querySelector(".edit-btn");
     const deleteBtn = fragment.querySelector(".delete-btn");
 
     title.textContent = todo.title;
+    const normalizedPriority = normalizePriority(todo.priority);
+    priority.textContent = priorityLabelMap[normalizedPriority];
+    priority.classList.add(normalizedPriority);
     date.textContent = `Criada em ${getFormattedDate(todo.createdAt)}`;
     checkbox.checked = todo.done;
 
@@ -130,7 +155,7 @@ function renderTodos() {
       try {
         await apiRequest(`api/todos/${encodeURIComponent(todo.id)}`, {
           method: "PUT",
-          body: JSON.stringify({ title: cleaned }),
+          body: JSON.stringify({ title: cleaned, priority: normalizePriority(todo.priority) }),
         });
         todo.title = cleaned;
         renderTodos();
@@ -172,7 +197,7 @@ todoForm.addEventListener("submit", async (event) => {
   const value = todoInput.value.trim();
   if (!value) return;
 
-  const newTodo = createTodo(value);
+  const newTodo = createTodo(value, todoPriority.value);
 
   try {
     await apiRequest("api/todos", {
@@ -183,6 +208,7 @@ todoForm.addEventListener("submit", async (event) => {
     todos.unshift(newTodo);
     renderTodos();
     todoInput.value = "";
+    todoPriority.value = "medium";
     todoInput.focus();
   } catch (error) {
     alert(error.message);
@@ -199,7 +225,7 @@ filterButtons.forEach((button) => {
 });
 
 clearDone.addEventListener("click", async () => {
-  const completedTodoIds = todos.filter((todo) => todo.done).map((todo) => todo.id);
+  const completedTodos = todos.filter((todo) => todo.done);
 
   try {
     await Promise.all(

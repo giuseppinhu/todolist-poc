@@ -40,6 +40,12 @@
             placeholder="Ex.: Revisar proposta comercial"
             required
           />
+          <label class="sr-only" for="todoPriority">Prioridade da tarefa</label>
+          <select id="todoPriority" name="todoPriority" aria-label="Prioridade">
+            <option value="high">Alta</option>
+            <option value="medium" selected>Média</option>
+            <option value="low">Baixa</option>
+          </select>
           <button type="submit">Adicionar</button>
         </form>
       </section>
@@ -69,7 +75,10 @@
         </label>
 
         <div class="todo-content">
-          <p class="todo-title"></p>
+          <div class="todo-main-row">
+            <p class="todo-title"></p>
+            <span class="todo-priority"></span>
+          </div>
           <small class="todo-date"></small>
         </div>
 

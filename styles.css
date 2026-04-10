@@ -98,7 +98,8 @@ h1 {
   gap: 0.7rem;
 }
 
-input[type="text"] {
+input[type="text"],
+select {
   flex: 1;
   border: 1px solid transparent;
   border-radius: 14px;
@@ -110,8 +111,13 @@ input[type="text"] {
   transition: border-color 0.2s ease;
 }
 
-input[type="text"]:focus {
+input[type="text"]:focus,
+select:focus {
   border-color: var(--accent);
+}
+
+select {
+  flex: 0 0 120px;
 }
 
 button {
@@ -228,9 +234,44 @@ button:hover {
   font-weight: 600;
 }
 
+.todo-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .todo-item.done .todo-title {
   text-decoration: line-through;
   color: #9ac8b7;
+}
+
+.todo-priority {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.todo-priority.high {
+  color: #ffd3dc;
+  background: rgba(255, 84, 112, 0.2);
+  border-color: rgba(255, 84, 112, 0.4);
+}
+
+.todo-priority.medium {
+  color: #d4cbff;
+  background: rgba(127, 90, 240, 0.2);
+  border-color: rgba(127, 90, 240, 0.45);
+}
+
+.todo-priority.low {
+  color: #bbf8df;
+  background: rgba(44, 182, 125, 0.2);
+  border-color: rgba(44, 182, 125, 0.45);
 }
 
 .todo-date {
